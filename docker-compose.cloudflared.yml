@@ -1,0 +1,44 @@
+# USE THIS INSTEAD if your ISP gives you no public IP (CGNAT) - common in Nepal.
+# No router port-forwarding, no certificates on your side.
+#
+#   1. Add ekamfdn.org to a free Cloudflare account (nameserver change at registrar).
+#   2. Cloudflare -> Zero Trust -> Networks -> Tunnels -> Create tunnel.
+#      Public hostname:  ekamfdn.org      -> service  http://caddy:80
+#      Public hostname:  www.ekamfdn.org  -> service  http://caddy:80
+#   3. Copy the tunnel token into TUNNEL_TOKEN below.
+#   4. TrueNAS -> Custom App -> Install via YAML -> paste this file.
+
+services:
+  git-sync:
+    image: registry.k8s.io/git-sync/git-sync:v4.4.0
+    container_name: ekam-gitsync
+    restart: unless-stopped
+    command:
+      - --repo=https://github.com/auddhab/ekam-website
+      - --ref=main
+      - --root=/git
+      - --link=current
+      - --period=60s
+      - --depth=1
+    volumes:
+      - /mnt/tank/apps/ekam-web/git:/git
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: ekam-web
+    restart: unless-stopped
+    depends_on:
+      - git-sync
+    command: caddy file-server --root /srv/current/site --listen :80
+    volumes:
+      - /mnt/tank/apps/ekam-web/git:/srv:ro
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: ekam-tunnel
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      - TUNNEL_TOKEN=PASTE_YOUR_TUNNEL_TOKEN_HERE
+    depends_on:
+      - caddy

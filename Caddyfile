@@ -1,0 +1,25 @@
+# Ekam Foundation - served by Caddy on TrueNAS, automatic HTTPS.
+{
+	email admin@ekamfdn.org
+}
+
+www.ekamfdn.org {
+	redir https://ekamfdn.org{uri} permanent
+}
+
+ekamfdn.org {
+	# git-sync checks the repo out under /srv/current ; the page lives in site/
+	root * /srv/current/site
+	file_server
+	encode zstd gzip
+	try_files {path} /index.html
+
+	@html path *.html /
+	header @html Cache-Control "no-cache"
+	header /* Cache-Control "public, max-age=3600"
+	header {
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		-Server
+	}
+}

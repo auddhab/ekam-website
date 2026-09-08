@@ -1,0 +1,47 @@
+# Ekam Foundation website - TrueNAS SCALE deployment.
+#
+# Apps  ->  Discover Apps  ->  Custom App  ->  "Install via YAML"  ->  paste this file.
+#
+# It runs two containers:
+#   git-sync : pulls this GitHub repo every 60s into a dataset
+#   caddy    : serves the files and gets a free HTTPS certificate
+#
+# Before you install:
+#   1. Create a dataset, e.g.  <pool>/apps/ekam-web  and sub-dirs  git/ data/ config/
+#   2. Put the Caddyfile from this repo at  /mnt/<pool>/apps/ekam-web/Caddyfile
+#   3. Replace every  /mnt/tank/  below with your real pool path.
+#   4. Free ports 80/443 on the NAS: System Settings -> General -> GUI ->
+#      set HTTP port 81, HTTPS port 444, save.
+#   5. Router: forward TCP 80 and 443 to the NAS IP.
+#   6. DNS:  A  ekamfdn.org -> <your public IP> ,  A  www -> <your public IP>
+
+services:
+  git-sync:
+    image: registry.k8s.io/git-sync/git-sync:v4.4.0
+    container_name: ekam-gitsync
+    restart: unless-stopped
+    command:
+      - --repo=https://github.com/auddhab/ekam-website
+      - --ref=main
+      - --root=/git
+      - --link=current
+      - --period=60s
+      - --depth=1
+    volumes:
+      - /mnt/tank/apps/ekam-web/git:/git
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: ekam-web
+    restart: unless-stopped
+    depends_on:
+      - git-sync
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - /mnt/tank/apps/ekam-web/git:/srv:ro
+      - /mnt/tank/apps/ekam-web/Caddyfile:/etc/caddy/Caddyfile:ro
+      - /mnt/tank/apps/ekam-web/data:/data
+      - /mnt/tank/apps/ekam-web/config:/config
