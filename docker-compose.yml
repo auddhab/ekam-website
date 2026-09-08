@@ -1,26 +1,18 @@
-# Ekam Foundation website - TrueNAS SCALE deployment.
+# Ekam Foundation website - TrueNAS SCALE (24.10+), behind your existing
+# Nginx Proxy Manager. NPM keeps ports 80/443; this app just serves the
+# files on an internal port and NPM does the domain + HTTPS.
 #
-# Apps  ->  Discover Apps  ->  Custom App  ->  "Install via YAML"  ->  paste this file.
+#   Apps -> Discover Apps -> Custom App -> "Install via YAML" -> paste this.
 #
-# It runs two containers:
-#   git-sync : pulls this GitHub repo every 60s into a dataset
-#   caddy    : serves the files and gets a free HTTPS certificate
-#
-# Before you install:
-#   1. Create a dataset, e.g.  <pool>/apps/ekam-web  and sub-dirs  git/ data/ config/
-#   2. Put the Caddyfile from this repo at  /mnt/<pool>/apps/ekam-web/Caddyfile
-#   3. Replace every  /mnt/tank/  below with your real pool path.
-#   4. Free ports 80/443 on the NAS: System Settings -> General -> GUI ->
-#      set HTTP port 81, HTTPS port 444, save.
-#   5. Router: forward TCP 80 and 443 to the NAS IP.
-#   6. DNS:  A  ekamfdn.org -> <your public IP> ,  A  www -> <your public IP>
+# Dataset used here:  Raid HDD / ekam-web   ->   /mnt/Raid HDD/ekam-web
+# First, in a TrueNAS shell:   mkdir -p "/mnt/Raid HDD/ekam-web/git"
 
 services:
   git-sync:
     image: registry.k8s.io/git-sync/git-sync:v4.4.0
     container_name: ekam-gitsync
     restart: unless-stopped
-    user: "0"                       # write to the bind-mounted dataset without ACL fuss
+    user: "0"
     command:
       - --repo=https://github.com/auddhab/ekam-website
       - --ref=main
@@ -29,20 +21,16 @@ services:
       - --period=60s
       - --depth=1
     volumes:
-      - /mnt/tank/apps/ekam-web/git:/git
+      - "/mnt/Raid HDD/ekam-web/git:/git"
 
-  caddy:
+  web:
     image: caddy:2-alpine
     container_name: ekam-web
     restart: unless-stopped
     depends_on:
       - git-sync
+    command: caddy file-server --root /srv/current/site --listen :80 --browse=false
     ports:
-      - "80:80"
-      - "443:443"
-      - "443:443/udp"
+      - "8088:80"          # <- point Nginx Proxy Manager at  <NAS-IP>:8088
     volumes:
-      - /mnt/tank/apps/ekam-web/git:/srv:ro
-      - /mnt/tank/apps/ekam-web/Caddyfile:/etc/caddy/Caddyfile:ro
-      - /mnt/tank/apps/ekam-web/data:/data
-      - /mnt/tank/apps/ekam-web/config:/config
+      - "/mnt/Raid HDD/ekam-web/git:/srv:ro"
