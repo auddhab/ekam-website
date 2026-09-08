@@ -1,36 +1,27 @@
-# Ekam Foundation website - TrueNAS SCALE (24.10+), behind your existing
-# Nginx Proxy Manager. NPM keeps ports 80/443; this app just serves the
-# files on an internal port and NPM does the domain + HTTPS.
+# Ekam Foundation website - SINGLE container.
+# One container clones this repo, pulls it every 60s, and serves site/ on :80.
+# Works both with "Install via YAML" and with the plain Custom App *form*
+# (field-by-field values are in README.md -> "Custom App form").
 #
-#   Apps -> Discover Apps -> Custom App -> "Install via YAML" -> paste this.
+# Runs behind your existing Nginx Proxy Manager: NPM keeps 80/443, this
+# publishes on host port 8088, and an NPM Proxy Host maps ekamfdn.org -> :8088.
 #
-# Dataset used here:  Raid HDD / ekam-web   ->   /mnt/Raid HDD/ekam-web
-# First, in a TrueNAS shell:   mkdir -p "/mnt/Raid HDD/ekam-web/git"
+# Before installing, in a TrueNAS shell:
+#   mkdir -p "/mnt/Raid HDD/ekam-web/data"
 
 services:
-  git-sync:
-    image: registry.k8s.io/git-sync/git-sync:v4.4.0
-    container_name: ekam-gitsync
-    restart: unless-stopped
-    user: "0"
-    command:
-      - --repo=https://github.com/auddhab/ekam-website
-      - --ref=main
-      - --root=/git
-      - --link=current
-      - --period=60s
-      - --depth=1
-    volumes:
-      - "/mnt/Raid HDD/ekam-web/git:/git"
-
-  web:
+  ekam-web:
     image: caddy:2-alpine
     container_name: ekam-web
     restart: unless-stopped
-    depends_on:
-      - git-sync
-    command: caddy file-server --root /srv/current/site --listen :80 --browse=false
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - >
+        apk add --no-cache git >/dev/null 2>&1;
+        [ -d /site/.git ] || git clone --depth 1 https://github.com/auddhab/ekam-website /site;
+        ( while true; do sleep 60; git -C /site pull -q 2>/dev/null || true; done ) &
+        exec caddy file-server --root /site/site --listen :80 --browse=false
     ports:
-      - "8088:80"          # <- point Nginx Proxy Manager at  <NAS-IP>:8088
+      - "8088:80"
     volumes:
-      - "/mnt/Raid HDD/ekam-web/git:/srv:ro"
+      - "/mnt/Raid HDD/ekam-web/data:/site"
