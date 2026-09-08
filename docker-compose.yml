@@ -20,6 +20,7 @@ services:
     image: registry.k8s.io/git-sync/git-sync:v4.4.0
     container_name: ekam-gitsync
     restart: unless-stopped
+    user: "0"                       # write to the bind-mounted dataset without ACL fuss
     command:
       - --repo=https://github.com/auddhab/ekam-website
       - --ref=main
