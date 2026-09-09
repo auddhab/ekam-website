@@ -1,3 +1,8 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Ekam Foundation</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -47,8 +52,9 @@
   body{
     margin:0; background:var(--paper); color:var(--ink);
     font-family:var(--font); font-size:0.96rem; line-height:1.5;
-    -webkit-font-smoothing:antialiased;
+    -webkit-font-smoothing:antialiased; overflow-x:hidden;
   }
+  img{max-width:100%; height:auto}
   h1,h2{font-family:var(--display); font-weight:500; line-height:1.06; text-wrap:balance; margin:0}
   h3{font-family:var(--font); font-weight:700; font-size:1.02rem; line-height:1.32; letter-spacing:-0.005em; margin:0}
   p{margin:0}
@@ -98,7 +104,7 @@
   .hero-emblem{position:relative; justify-self:center; width:min(360px,72vw); aspect-ratio:1}
   .hero-emblem img{position:absolute; inset:12%; width:76%; height:76%; filter:drop-shadow(0 10px 24px var(--shadow))}
   .hero-emblem svg{position:absolute; inset:0; width:100%; height:100%; color:var(--gold); opacity:.16}
-  .hero h1{font-size:clamp(2.8rem,11vw,5rem); line-height:1.02; letter-spacing:0; font-weight:600}
+  .hero h1{font-size:clamp(2.35rem,9vw,5rem); line-height:1.03; letter-spacing:0; font-weight:600; overflow-wrap:break-word}
   .hero h1 em{font-style:normal; color:var(--gold)}
   .hero .lede{margin-top:1.2rem}
   .hero .cta{display:flex; gap:.9rem; flex-wrap:wrap; margin-top:.4rem}
@@ -114,7 +120,7 @@
   .fact dt{font-size:.68rem; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--gold)}
   .fact dd{margin:.4em 0 0; font-size:.9rem; color:var(--ink)}
   @media (max-width:720px){ .facts .wrap{grid-template-columns:1fr 1fr} }
-  @media (max-width:420px){ .facts .wrap{grid-template-columns:1fr} .fact{padding-right:0} }
+  @media (max-width:560px){ .facts .wrap{grid-template-columns:1fr} .fact{padding:15px 0} }
 
   /* generic section */
   .section{padding:clamp(3rem,8vw,5.5rem) 0}
@@ -187,10 +193,34 @@
   footer h4{margin:0 0 .5rem; font-family:var(--font); font-weight:600; font-size:.68rem; letter-spacing:.14em; text-transform:uppercase; color:var(--gold)}
   footer a:hover{color:var(--gold)}
   .legal{margin-top:2.4rem; padding-top:1.4rem; border-top:1px solid var(--line); color:var(--ink-soft); font-size:.78rem; line-height:1.6; max-width:70ch}
-  @media (max-width:760px){ .foot-grid{grid-template-columns:1fr} }
+  @media (max-width:760px){ .foot-grid{grid-template-columns:1fr; gap:26px} }
+
+  /* --- phones --- */
+  @media (max-width:600px){
+    html{scroll-padding-top:68px}
+    .bar{gap:12px}
+    .brand b{font-size:.95rem}
+    .bar .btn{font-size:.62rem; padding:.5rem .7rem; letter-spacing:.08em}
+    .hero .wrap{padding-top:1.75rem; padding-bottom:2.25rem}
+    .hero .cta{flex-direction:column; align-items:stretch; gap:.7rem}
+    .hero .cta .btn{width:100%}
+    .hero-emblem{width:min(220px,66vw)}
+    .section{padding:2.75rem 0}
+    .section-head{margin-bottom:1.5rem}
+    .pillar{padding:22px}
+    .mandate li{grid-template-columns:2rem 1fr}
+    .give{gap:1.5rem}
+  }
+  @media (max-width:380px){
+    .brand b{font-size:.86rem; letter-spacing:.04em}
+    .bar .btn{font-size:.58rem; padding:.5rem .6rem}
+    .hero h1{font-size:2.1rem}
+  }
 
   @media (prefers-reduced-motion:reduce){ *{transition:none!important; scroll-behavior:auto} }
 </style>
+</head>
+<body>
 
 <header>
   <div class="wrap bar">
@@ -450,3 +480,5 @@
     }
   })();
 </script>
+</body>
+</html>
